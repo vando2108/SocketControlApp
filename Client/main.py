@@ -5,6 +5,8 @@ import time
 from winreg import REG_EXPAND_SZ
 import json
 import numpy as np
+import io
+import PIL.Image as Image
 
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 9090
@@ -128,12 +130,18 @@ def regDeleteKey(s, keyPath):
 if __name__ == '__main__':
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((SERVER_HOST, int(SERVER_PORT)))
-        respone = s.recv(10 * 1024)
-        buff = np.fromstring(respone, np.uint8)
-        buff = buff.reshape(1, -1)
-        img = cv2.imdecode(buff, cv2.IMREAD_COLOR)
-        cv2.imshow('', img)
-        cv2.waitKey(0)
+        while True:
+            img_size = s.recv(8)
+            img_size = int(img_size.decode("utf8"))
+            print(img_size)
+            respone = s.recv(img_size)
+            nparr = np.fromstring(respone, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            cv2.imshow('frame', img)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        cv2.destroyAllWindows()
+
     #    temp = []
     #    temp.append(("123123", "23123", 31231))
     #    temp.append(("2312", "23123", 31231))
