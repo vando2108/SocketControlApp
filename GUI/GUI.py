@@ -51,7 +51,7 @@ Button(win, text='Logout', command=lambda: Screenshot.screenshot(
     s)).place(relx=0.46, rely=0.4, relwidth=0.19, relheight=0.25)
 Button(win, text='Key\nStroke', command=lambda: KeyStroke.key_stroke(
     s)).place(relx=0.67, rely=0.18, relwidth=0.28, relheight=0.2)
-Button(win, text='Live\nScreen', command=lambda: KeyStroke.key_stroke(
+Button(win, text='Live\nScreen', command=lambda: Screenshot.screenshot(
     s)).place(relx=0.67, rely=0.4, relwidth=0.28, relheight=0.25)
 Button(win, text='File Explorer', command=lambda: FileExplorer.file_explorer(
     s)).place(relx=0.25, rely=0.67, relwidth=0.48, relheight=0.21)

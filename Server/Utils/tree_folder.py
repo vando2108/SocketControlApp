@@ -1,17 +1,15 @@
 import os 
 import glob
+import time
 
 def list_files(startpath):
 	dirs = []
 	files = []
 	for f in os.listdir(startpath):
-		if (os.path.isfile(os.path.join(startpath, f))):
-			files.append(f)
+		file_path = os.path.join(startpath, f)
+		date = time.ctime(os.path.getctime(file_path))
+		if (os.path.isfile(file_path)):
+			files.append([f, date])
 		else:
-			dirs.append(f)
+			dirs.append([f, date])
 	return dirs, files
-
-if __name__ == '__main__':
-	dirs, files = list_files("e:/")
-	print(dirs)
-	print(files)
