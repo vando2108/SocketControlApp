@@ -1,27 +1,31 @@
-import socket
-import pickle
-from struct import *
+import json
+import sys
+
+from numpy.lib.arraysetops import isin
+
+def receive_obj(client):
+	obj_size = client.recv(8)
+	obj_size = (obj_size.decode("utf8"))
+	print(obj_size)
+	obj_size = int(obj_size)
+	temp = client.recv(obj_size)
+	print(temp)
+	temp = json.loads(temp.decode())
+	return temp['data']
 
 def send_obj(client, obj):
-    msg = pickle.dumps(obj)
-    length = pack('>Q',len(msg))
-    client.sendall(length)
-    client.sendall(msg)
+	if not isinstance(obj, dict):
+		obj = {"data": obj}
+	obj_size = str(sys.getsizeof(json.dumps(obj).encode()))
+	print(obj_size)
+	print(obj)
+	while len(obj_size) < 8:
+		obj_size = '0' + obj_size
+	client.sendall(bytes(obj_size, "utf8"))
+	client.sendall(json.dumps(obj).encode())
 
-def receive_obj(client):
-	msg = bytearray()
-	header = client.recv(4096)
-	(length,) = unpack('>Q',header)
-	length_recv = 0
-	while length_recv < length:
-		s = client.recv(4096)
-		msg += s
-		length_recv += len(s)
-	return pickle.loads(msg)
-
-'''def send_obj(client, obj):
-    for x in obj:
-        client.sendall(bytes(x, 'utf8'))
-
-def receive_obj(client):
-	client.recv(1024).decode('utf8')'''
+def receive_image(client):
+	obj_size = client.recv(8)
+	obj_size = int(obj_size.decode())
+	data = client.recv(obj_size)
+	return data
