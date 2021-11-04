@@ -12,9 +12,6 @@ lb = None
 def close_application(s, ID):
     global lb
     request = ['application', 'kill application', ID.get()]
-    #for line in lb.get_children():
-        #if lb.item(line)['values'][1] == ID.get():
-            #lb.delete(line)
     send_obj(s, request)
     mes = receive_obj(s)
     if mes[0] == 'done':
@@ -48,7 +45,7 @@ def receivedListapplication(s):
     pass
 
 def watch_application(s):
-    if check_connect(s) == False: return
+    #if check_connect(s) == False: return
     global list_application, lb
 
     request = ['application', 'watch application']

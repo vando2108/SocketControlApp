@@ -22,11 +22,9 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 def quit_button():
-    try:
-        s.sendall(bytes(['check_connect']))
+    if check_connect(s):
+        send_obj(s, ["quit"])
         s.close()
-    except:
-        pass
     win.destroy()
     pass
 
@@ -59,5 +57,6 @@ Button(win, text='File Explorer', command=lambda: FileExplorer.file_explorer(
     s)).place(relx=0.25, rely=0.67, relwidth=0.48, relheight=0.21)
 Button(win, text='Quit', command=quit_button).place(
     relx=0.75, rely=0.67, relwidth=0.2, relheight=0.21)
+
 win.mainloop()
 s.close()
