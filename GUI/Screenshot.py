@@ -1,11 +1,13 @@
+from io import BytesIO
 from tkinter import *
 from tkinter.ttk import *
 import socket
 from PIL import ImageTk, Image
 from tkinter import filedialog
-from SendObject import send_obj, receive_obj
+from SendObject import send_obj, receive_obj, receive_image
 from CheckConnect import check_connect
 import time
+import base64
 
 soc = None
 
@@ -19,10 +21,9 @@ class MainWindow():
         self.canvas.bind("<Configure>", self.resize)
         self.pic = "screenshot.png"
         # get images
-        request = ['screenshot']
+        request = ['screen stream']
         send_obj(soc, request)
-        time.sleep(0.01)
-        data = receive_obj(soc)
+        data = receive_image(soc)
         f = open(self.pic, "wb")
         f.write(data)
         f.close()
@@ -50,8 +51,7 @@ class MainWindow():
         if check_connect(soc) == False: return
         request = ['screenshot']
         send_obj(soc, request)
-        time.sleep(0.01)
-        data = receive_obj(soc)
+        data = receive_image(soc)
         f = open(self.pic, "wb")
         f.write(data)
         f.close()
@@ -68,6 +68,7 @@ class MainWindow():
 
 #----------------------------------------------------------------------
 def screenshot(s):
+    global soc
     soc = s
     if check_connect(soc) == False: return
     root = Toplevel()

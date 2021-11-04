@@ -104,6 +104,9 @@ def getListRunningWindows():
 def processRequest(request, conn):
     print(request)
     
+    if request[0] == 'screen stream':
+       ss.screen_stream(conn) 
+
     if request[0] == 'process':
         if request[1] == 'watch process':
             temp = getProcessRunning()
@@ -118,6 +121,8 @@ def processRequest(request, conn):
             except:
                 oh.send_obj(conn, ['error'])
             pass
+        if request[1] == 'start process':
+            subprocess.Popen([request[2]])
     
     if request[0] == 'application':
         if request[1] == 'watch application':
@@ -239,7 +244,7 @@ if __name__ == '__main__':
                 while True:
                     print("ready new request")
                     request = oh.receive_obj(conn)
-                    if not request:
-                      break
+                    if request[0] == 'quit':
+                        break
                     processRequest(request, conn)
                 conn.close

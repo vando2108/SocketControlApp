@@ -3,6 +3,7 @@ from tkinter.ttk import *
 import socket
 import Connect, ProcessRunning, AppRunning, ShutDown, Screenshot, KeyStroke, EditRegistry
 from SendObject import send_obj
+from CheckConnect import check_connect
 
 win = Tk()
 win.title('Client')
@@ -15,18 +16,15 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #s.connect((HOST, PORT))
 
 def quit_button():
-    try:
-        send_obj(s, ['check_connect'])
+    if check_connect(s):
+        send_obj(s, ["quit"])
         s.close()
-        return
-    except:
-        pass
     win.destroy()
     pass
 
 IP = Entry(win, font='Times 14')
 IP.place(relx=0.05, rely=0.05, relwidth=0.6, relheight=0.1)
-IP.insert(0, 'Enter IP Address')
+IP.insert(0, '127.0.0.1')
 Button(win, text='Connect', command=lambda: Connect.connect(s, IP.get(), PORT)).place(relx=0.67, rely=0.05, relwidth=0.28, relheight=0.1)
 Button(win, text='Process\nRunning', command=lambda: ProcessRunning.process_running(s)).place(relx=0.05, rely=0.18, relwidth=0.18, relheight=0.7)
 Button(win, text='App Running',command=lambda: AppRunning.application_running(s)).place(relx=0.25, rely=0.18, relwidth=0.4, relheight=0.2)
