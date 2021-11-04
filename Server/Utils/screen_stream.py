@@ -1,5 +1,4 @@
 import pyautogui
-import cv2
 import io
 import time
 import json
