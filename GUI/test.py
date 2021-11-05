@@ -1,30 +1,55 @@
+from socket import socket
+from threading import Thread
+from zlib import compress
 from tkinter import *
-from tkinter import ttk
-
-def selectItem(a):
-    curItem = tree.focus()
-    print(tree.item(curItem)['values'][1])
-
-def openFolder(event):
-  curItem = tree.focus()
-  print(tree.item(curItem)['values'][1])
-
+from mss import mss
 
 root = Tk()
-tree = ttk.Treeview(root, columns=("size", "modified"))
-tree["columns"] = ("date", "time", "loc")
+WIDTH = root.winfo_screenwidth() - 100
+HEIGHT = root.winfo_screenheight() - 100
 
-tree.column("date", width=65)
-tree.column("time", width=40)
-tree.column("loc", width=100)
+print(WIDTH)
+print(HEIGHT)
 
-tree.heading("date", text="Date")
-tree.heading("time", text="Time")
-tree.heading("loc", text="Loc")
-tree.bind('<ButtonRelease-1>', selectItem)
-tree.bind('<Double-1>', lambda _ : openFolder(_))
+def retreive_screenshot(conn):
+    with mss() as sct:
+        # The region to capture
+        rect = {'top': 0, 'left': 0, 'width': WIDTH, 'height': HEIGHT}
 
-tree.insert("","end",text = "Name",values = ("Date","Time","Loc"))
+        while 'recording':
+            # Capture the screen
+            img = sct.grab(rect)
+            # Tweak the compression level here (0-9)
+            pixels = compress(img.rgb, 6)
 
-tree.grid()
-root.mainloop()
+            # Send the size of the pixels length
+            size = len(pixels)
+            size_len = (size.bit_length() + 7) // 8
+            conn.send(bytes([size_len]))
+
+            # Send the actual pixels length
+            size_bytes = size.to_bytes(size_len, 'big')
+            conn.send(size_bytes)
+
+            # Send pixels
+            conn.sendall(pixels)
+
+
+def main(host='127.0.0.1', port=9090):
+    sock = socket()
+    sock.bind((host, port))
+    try:
+        sock.listen(5)
+        print('Server started.')
+
+        while 'connected':
+            conn, addr = sock.accept()
+            print('Client connected IP:', addr)
+            thread = Thread(target=retreive_screenshot, args=(conn,))
+            thread.start()
+    finally:
+        sock.close()
+
+
+if __name__ == '__main__':
+    main()

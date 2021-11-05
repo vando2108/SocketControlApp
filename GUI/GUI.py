@@ -1,15 +1,10 @@
 from tkinter import *
 from tkinter.ttk import *
 import socket
-import Connect
-import FileExplorer
-import MACAddress
-import ProcessRunning
-import AppRunning
-import ShutDown
-import Screenshot
-import KeyStroke
-import EditRegistry
+import Connect, FileExplorer, MACAddress, ProcessRunning, AppRunning, ShutDown
+import KeyStroke, Logout, Screenshot
+from CheckConnect import check_connect
+from SendObject import send_obj
 
 win = Tk()
 win.title('Client')
@@ -18,15 +13,11 @@ win.geometry('500x400')
 HOST = '127.0.0.1'
 PORT = 9090
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#s.connect((HOST, PORT))
-
 
 def quit_button():
-    try:
-        s.sendall(bytes(['check_connect']))
+    if check_connect(s):
+        send_obj(s, ["quit"])
         s.close()
-    except:
-        pass
     win.destroy()
     pass
 
@@ -34,7 +25,6 @@ def quit_button():
 def QuitButton():
     s.close()
     win.destroy()
-
 
 IP = Entry(win, font='Times 14')
 IP.place(relx=0.05, rely=0.05, relwidth=0.6, relheight=0.1)
@@ -49,11 +39,11 @@ Button(win, text='App Running', command=lambda: AppRunning.application_running(
     s)).place(relx=0.25, rely=0.18, relwidth=0.4, relheight=0.2)
 Button(win, text='Shut down', command=lambda: ShutDown.shut_down(
     s)).place(relx=0.25, rely=0.4, relwidth=0.19, relheight=0.25)
-Button(win, text='Logout', command=lambda: Screenshot.screenshot(
+Button(win, text='Logout', command=lambda: Logout.logout(
     s)).place(relx=0.46, rely=0.4, relwidth=0.19, relheight=0.25)
 Button(win, text='Key\nStroke', command=lambda: KeyStroke.key_stroke(
     s)).place(relx=0.67, rely=0.18, relwidth=0.28, relheight=0.2)
-Button(win, text='Live\nScreen', command=lambda: KeyStroke.key_stroke(
+Button(win, text='Live\nScreen', command=lambda: Screenshot.screenshot(
     s)).place(relx=0.67, rely=0.4, relwidth=0.28, relheight=0.25)
 Button(win, text='File Explorer', command=lambda: FileExplorer.file_explorer(
     s)).place(relx=0.25, rely=0.67, relwidth=0.48, relheight=0.21)

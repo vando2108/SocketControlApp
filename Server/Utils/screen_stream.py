@@ -2,23 +2,39 @@ import pyautogui
 import io
 import time
 import json
+import PIL
+import sys
+import Utils.object_handler as oh
+import base64
 
-def screen_stream():
-	temp = pyautogui.screenshot()
-	temp.save('temp_image.jpg')
-	img = io.open("temp_image.jpg", mode='r')
-	img_byte_arr = io.BytesIO()
-	img.save(img_byte_arr, format="JPG")
-	img_byte_arr = img_byte_arr.getvalue()
-	print(img_byte_arr)
-	#while True:
-	#	temp = pyautogui.screenshot()
-	#	temp.save(r'temp_image.jpg')
-	#	img = cv2.imread('temp_image.jpg')
-	#	cv2.imshow('frame', img)
-	#	if cv2.waitKey(1) & 0xFF == ord('q'):
-	#		break
-	#cv2.destroyAllWindows()
+def send_image(client, img_byte_arr):
+    img_size = str(sys.getsizeof(img_byte_arr))
+    while len(img_size) < 8:
+      img_size = '0' + img_size
+    client.sendall(bytes(img_size, 'utf8'))	
+    time.sleep(0.001)
+    client.sendall(img_byte_arr)
+
+def screen_stream(client):
+    temp = pyautogui.screenshot()
+    temp.save('temp_image.png')
+    img = PIL.Image.open("temp_image.png", mode='r')
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="PNG")
+    img_byte_arr = img_byte_arr.getvalue()
+    send_image(client, img_byte_arr)
+
+    while True:
+      temp = pyautogui.screenshot()
+      temp.save('temp_image.png')
+      img = PIL.Image.open("temp_image.png", mode='r')
+      img_byte_arr = io.BytesIO()
+      img.save(img_byte_arr, format="PNG")
+      img.seek(0)
+      img_byte_arr = img_byte_arr.getvalue()
+      client.sendall(bytes(str(sys.getsizeof(img_byte_arr)), "utf8"))
+      time.sleep(0.001)
+      client.sendall(img_byte_arr)
 
 if __name__ == '__main__':
 	screen_stream()

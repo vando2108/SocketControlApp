@@ -5,9 +5,8 @@ import time
 
 def check_connect(s):
     try:
-        request = ['check connect']
+        request = ["check connect"]
         send_obj(s, request)
-        time.sleep(0.1)
         return True
     except:
         messagebox.showinfo('', 'Not connected to Sever!')

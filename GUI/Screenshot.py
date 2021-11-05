@@ -1,11 +1,13 @@
+from io import BytesIO
 from tkinter import *
 from tkinter.ttk import *
 import socket
 from PIL import ImageTk, Image
 from tkinter import filedialog
-from SendObject import send_obj, receive_obj
+from SendObject import send_obj, receive_obj, receive_image
 from CheckConnect import check_connect
 import time
+import base64
 
 soc = None
 
@@ -19,19 +21,22 @@ class MainWindow():
         self.canvas.bind("<Configure>", self.resize)
         self.pic = "screenshot.png"
         # get images
-        request = ['screenshot']
-        send_obj(soc, request)
-        time.sleep(0.01)
-        data = receive_obj(soc)
-        f = open(self.pic, "wb")
-        f.write(data)
-        f.close()
-        # images
-        self.photo = Image.open(self.pic).resize((490, 400), Image.ANTIALIAS)
-        self.img = ImageTk.PhotoImage(self.photo)
+        
+        ok = True
+        while ok:
+          ok = False
+          request = ['screen stream']
+          send_obj(soc, request)
+          data = receive_image(soc)
+          f = open(self.pic, "wb")
+          f.write(data)
+          f.close()
+          # images
+          self.photo = Image.open(self.pic).resize((490, 400), Image.ANTIALIAS)
+          self.img = ImageTk.PhotoImage(self.photo)
 
-        # set first image on canvas
-        self.canvas_img = self.canvas.create_image(0, 0, anchor = NW, image = self.img)
+          # set first image on canvas
+          self.canvas_img = self.canvas.create_image(0, 0, anchor = NW, image = self.img)
 
         # button to change image
         Button(main, text='TakeScreenshot', command=self.takeScreenshot).place(relx=0.8, rely=0.1, relwidth=0.15, relheight=0.5)
@@ -48,10 +53,9 @@ class MainWindow():
 
     def takeScreenshot(self):
         if check_connect(soc) == False: return
-        request = ['screenshot']
+        request = ['screen stream']
         send_obj(soc, request)
-        time.sleep(0.01)
-        data = receive_obj(soc)
+        data = receive_image(soc)
         f = open(self.pic, "wb")
         f.write(data)
         f.close()
@@ -68,6 +72,7 @@ class MainWindow():
 
 #----------------------------------------------------------------------
 def screenshot(s):
+    global soc
     soc = s
     if check_connect(soc) == False: return
     root = Toplevel()

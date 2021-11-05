@@ -29,7 +29,7 @@ def PrintKeyBoard(s, t):
     pass
 
 def key_stroke(s):
-    if check_connect(s) == False: return
+    # if check_connect(s) == False: return
     root = Toplevel()
     root.grab_set()
     root.title('Keystroke')

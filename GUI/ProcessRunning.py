@@ -8,6 +8,7 @@ from SendObject import receive_obj
 
 list_process = []
 lb = None
+itemProcess = None
 
 def close_process(s, ID):
     global lb
@@ -23,17 +24,9 @@ def close_process(s, ID):
     ID.delete(0, END)
 
 def kill_process(s):
-    if check_connect(s) == False: return
-    root2 = Toplevel()
-    root2.grab_set()
-    root2.title('Kill')
-    root2.geometry('300x50')
-    id = Entry(root2)
-    id.place(relx=0.05, rely=0.25, relwidth=0.6, relheight=0.5)
-    id.insert(0, 'Enter ID')
-    
-    Button(root2, text = 'Kill', command=lambda: close_process(s, id)).place(relx=0.7, rely=0.25, relwidth=0.25, relheight=0.5)
-    root2.mainloop()
+    global itemProcess
+    close_process(s, str(itemProcess))
+    watch_process(s)
     pass
 
 def receivedListProcess(s):
@@ -72,9 +65,9 @@ def open_process(s, name_process):
     try:
         send_obj(s, request)
         name_process.delete(0, END)
-        messagebox.showinfo('', 'Successful open application!')
+        messagebox.showinfo('', 'Successful open process!')
     except:
-        messagebox.showinfo('', 'Opened application!')
+        messagebox.showinfo('', 'Opened process!')
     pass
 
 def start_process(s):
@@ -90,6 +83,13 @@ def start_process(s):
     root2.mainloop()
     pass
 
+def selectItem(a):
+  global lb, itemProcess
+  curItem = lb.focus()
+  itemProcess = lb.item(curItem)['values'][1]
+  print(itemProcess)
+  pass
+
 def process_running(s):
     if check_connect(s) == False: return
 
@@ -100,9 +100,11 @@ def process_running(s):
     root.title('Process')
     root.geometry('400x400')
 
-    my_scrollbar = Scrollbar(root, orient=VERTICAL)
+    label1 = LabelFrame(root, text='Process Running')
+    label1.place(relx=0.04, rely=0.2, relwidth=0.9, relheight=0.7)
+    my_scrollbar = Scrollbar(label1, orient=VERTICAL)
 
-    lb = Treeview(root, yscrollcommand=my_scrollbar.set)
+    lb = Treeview(label1, yscrollcommand=my_scrollbar.set)
     lb['columns'] = ('Name Process', 'ID Process', 'Count Thread')
     lb.column('#0', width=0, stretch=NO)    
     lb.column('Name Process', width=80, anchor=CENTER)
@@ -113,12 +115,13 @@ def process_running(s):
     lb.heading('Name Process', text='Name Process', anchor=CENTER)
     lb.heading('ID Process', text='ID Process', anchor=CENTER)
     lb.heading('Count Thread', text='Count Thread', anchor=CENTER)
-    lb.place(relx=0.04, rely=0.2, relwidth=0.87, relheight=0.7)
+    lb.place(relx=0.02, rely=0.02, relwidth=0.92, relheight=0.96)
+    lb.bind('<ButtonRelease-1>', selectItem)
     #for x in range(30):
     #    lb.insert(parent='', index=x, iid=x, text='', values=('notepad', x, '2'))
 
     my_scrollbar.config(command=lb.yview)
-    my_scrollbar.place(relx=0.91, rely=0.2, relwidth=0.05, relheight=0.7)
+    my_scrollbar.place(relx=0.94, rely=0.02, relwidth=0.04, relheight=0.96)
 
     Button(root, text='Kill', command=lambda: kill_process(s)).place(relx=0.04, rely=0.05, relwidth=0.2, relheight=0.1)
     Button(root, text='Watch', command=lambda: watch_process(s)).place(relx=0.28, rely=0.05, relwidth=0.2, relheight=0.1)

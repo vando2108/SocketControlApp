@@ -60,7 +60,7 @@ def function_changed(event):
         pass
 
 def Send(s):
-    if check_connect(s) == False: return
+    # if check_connect(s) == False: return
     global select_path, sf, namee, valuee, typee, text_2, list_type
 
     data = ['registry', sf.get(), select_path.get(), namee.get(), valuee.get(), typee.get()]

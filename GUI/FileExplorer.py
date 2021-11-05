@@ -64,7 +64,7 @@ def toRefresh(s):
 def toDeleteFolder(s):
   global path, itemFolder
   stringPath = path.get() + itemFolder + '\\'
-  request = ['tree folder', 'delete folder', stringPath]
+  request = ['file explorer', 'delete folder', stringPath]
   send_obj(s, request)
   time.sleep(0.1)
   pass 
@@ -72,7 +72,7 @@ def toDeleteFolder(s):
 def toCopyFile(s):
   global path, itemFile
   stringPath = path.get() + itemFile
-  request = ['tree folder', 'copy file', stringPath]
+  request = ['file explorer', 'copy file', stringPath]
   send_obj(s, request)
   time.sleep(0.1)
   response = receive_obj(s)
@@ -88,7 +88,7 @@ def toCopyFile(s):
 def toDeleteFile(s):
   global path, itemFile
   stringPath = path.get() + itemFile
-  request = ['tree folder', 'delete file', stringPath]
+  request = ['file explorer', 'delete file', stringPath]
   send_obj(s, request)
   time.sleep(0.1)
   pass 
@@ -106,31 +106,29 @@ def openFolder(event, s):
 def file_explorer(s):
   global path, itemFile, itemFolder, lfolder, lfile
 
-  if check_connect(s) == False: return
-  request = ['tree folder']
-  send_obj(s, request)
-  time.sleep(0.1)
-  listDir = receive_obj(s)
-  time.sleep(0.1)
-  listFolder = receive_obj(s)
+  # if check_connect(s) == False: return
+  # request = ['file explorer', 'C:\\']
+  # requestPath(s, request)
 
   root = Toplevel()
   root.grab_set()
   root.title('File Explorer')
-  root.geometry('500x500+200+100')
+  root.geometry('700x500+200+100')
 
   ### folder
-  my_scrollbar1 = Scrollbar(root, orient=VERTICAL)
-  lfolder = Treeview(root, yscrollcommand=my_scrollbar1.set)
+  label1 = LabelFrame(root, text='Folder')
+  label1.place(relx=0.04, rely=0.1, relwidth=0.9, relheight=0.38)
+  my_scrollbar1 = Scrollbar(label1, orient=VERTICAL)
+  lfolder = Treeview(label1, yscrollcommand=my_scrollbar1.set)
   lfolder['columns'] = ('Folder Name', 'Create At')
   lfolder.column('#0', width=0, stretch=NO)    
   lfolder.column('Folder Name', width=200, anchor=CENTER)
-  lfolder.column('Create At', width=20, anchor=CENTER)
+  lfolder.column('Create At', width=100, anchor=CENTER)
 
   lfolder.heading('#0', text='', anchor=CENTER)
   lfolder.heading('Folder Name', text='Folder Name', anchor=CENTER)
   lfolder.heading('Create At', text='Create At', anchor=CENTER)
-  lfolder.place(relx=0.04, rely=0.1, relwidth=0.87, relheight=0.38)
+  lfolder.place(relx=0.02, rely=0.02, relwidth=0.92, relheight=0.96)
 
   lfolder.bind('<ButtonRelease-1>', selectItemFolder)
   lfolder.bind('<Double-1>', lambda _ : openFolder(_, s))
@@ -138,27 +136,29 @@ def file_explorer(s):
       lfolder.insert(parent='', index=x, iid=x, text='', values=('notepad', x))
 
   my_scrollbar1.config(command=lfolder.yview)
-  my_scrollbar1.place(relx=0.91, rely=0.1, relwidth=0.05, relheight=0.38)
+  my_scrollbar1.place(relx=0.94, rely=0.02, relwidth=0.04, relheight=0.96)
 
   ### File
-  my_scrollbar2 = Scrollbar(root, orient=VERTICAL)
-  lfile = Treeview(root, yscrollcommand=my_scrollbar2.set)
+  label2 = LabelFrame(root, text='File')
+  label2.place(relx=0.04, rely=0.5, relwidth=0.9, relheight=0.38)
+  my_scrollbar2 = Scrollbar(label2, orient=VERTICAL)
+  lfile = Treeview(label2, yscrollcommand=my_scrollbar2.set)
   lfile['columns'] = ('File Name', 'Create At')
   lfile.column('#0', width=0, stretch=NO)    
   lfile.column('File Name', width=200, anchor=CENTER)
-  lfile.column('Create At', width=20, anchor=CENTER)
+  lfile.column('Create At', width=100, anchor=CENTER)
 
   lfile.heading('#0', text='', anchor=CENTER)
   lfile.heading('File Name', text='File Name', anchor=CENTER)
   lfile.heading('Create At', text='Create At', anchor=CENTER)
-  lfile.place(relx=0.04, rely=0.5, relwidth=0.87, relheight=0.38)
+  lfile.place(relx=0.02, rely=0.02, relwidth=0.92, relheight=0.96)
 
   lfile.bind('<ButtonRelease-1>', selectItemFile)
   for x in range(30):
       lfile.insert(parent='', index=x, iid=x, text='', values=('notepad', x))
 
   my_scrollbar2.config(command=lfile.yview)
-  my_scrollbar2.place(relx=0.91, rely=0.5, relwidth=0.05, relheight=0.38)
+  my_scrollbar2.place(relx=0.94, rely=0.02, relwidth=0.04, relheight=0.96)
 
 
   Button(root, text='Back', command=lambda: toBack(s)).place(relx=0.04, rely=0.02, relwidth=0.1, relheight=0.05)
