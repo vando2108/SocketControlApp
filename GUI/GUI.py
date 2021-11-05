@@ -49,5 +49,6 @@ Button(win, text='File Explorer', command=lambda: FileExplorer.file_explorer(
     s)).place(relx=0.25, rely=0.67, relwidth=0.48, relheight=0.21)
 Button(win, text='Quit', command=quit_button).place(
     relx=0.75, rely=0.67, relwidth=0.2, relheight=0.21)
+    
 win.mainloop()
 s.close()

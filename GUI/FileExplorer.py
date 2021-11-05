@@ -12,27 +12,19 @@ pathList = ["C"]
 
 def selectItemFolder(a):
   global itemFolder, lfolder
-  print(type(lfolder))
   curItem = lfolder.focus()
   itemFolder = lfolder.item(curItem)['values'][0]
-  print(itemFolder)
   pass
 
 def selectItemFile(a):
   global itemFile, lfile
-  print(type(lfile))
   curItem = lfile.focus()
   itemFile = lfile.item(curItem)['values'][0]
-  print(itemFile)
   pass
 
 def requestPath(s, request):
   send_obj(s, request)
-  time.sleep(0.1)
-  listFolder = receive_obj(s)
-  time.sleep(0.1)
-  listFile = receive_obj(s)
-  time.sleep(0.1)
+  listFolder, listFile = receive_obj(s)
 
   lfolder.delete(*lfolder.get_children())
   for i in range(len(listFolder)):
@@ -46,7 +38,7 @@ def requestPath(s, request):
 
 def toBack(s):
   global path
-  if len(pathList): pathList.pop()
+  if len(pathList) > 1: pathList.pop()
   path.delete(0, END)
   stringPath = ''
   if len(pathList): stringPath = pathList[0] + ":\\"
@@ -64,19 +56,16 @@ def toRefresh(s):
 def toDeleteFolder(s):
   global path, itemFolder
   stringPath = path.get() + itemFolder + '\\'
-  request = ['file explorer', 'delete folder', stringPath]
+  request = ['file explorer', 'delete', stringPath]
   send_obj(s, request)
-  time.sleep(0.1)
   pass 
 
 def toCopyFile(s):
   global path, itemFile
   stringPath = path.get() + itemFile
-  request = ['file explorer', 'copy file', stringPath]
+  request = ['file explorer', 'copy', stringPath]
   send_obj(s, request)
-  time.sleep(0.1)
   response = receive_obj(s)
-  time.sleep(0.5)
   filename = filedialog.asksaveasfilename(initialdir='/', title='Save File', 
       filetypes=(('Text Files', 'txt.*'), ('All Files', '*.*')))
   
@@ -88,9 +77,8 @@ def toCopyFile(s):
 def toDeleteFile(s):
   global path, itemFile
   stringPath = path.get() + itemFile
-  request = ['file explorer', 'delete file', stringPath]
+  request = ['file explorer', 'delete', stringPath]
   send_obj(s, request)
-  time.sleep(0.1)
   pass 
 
 def openFolder(event, s):
@@ -106,9 +94,9 @@ def openFolder(event, s):
 def file_explorer(s):
   global path, itemFile, itemFolder, lfolder, lfile
 
-  # if check_connect(s) == False: return
-  # request = ['file explorer', 'C:\\']
-  # requestPath(s, request)
+  if check_connect(s) == False: return
+  request = ['file explorer', "C:\\"]
+  requestPath(s, request)
 
   root = Toplevel()
   root.grab_set()
@@ -132,8 +120,8 @@ def file_explorer(s):
 
   lfolder.bind('<ButtonRelease-1>', selectItemFolder)
   lfolder.bind('<Double-1>', lambda _ : openFolder(_, s))
-  for x in range(30):
-      lfolder.insert(parent='', index=x, iid=x, text='', values=('notepad', x))
+  # for x in range(len(dirs)):
+  #   lfolder.insert(parent='', index=x, iid=x, text='', values=dirs[x])
 
   my_scrollbar1.config(command=lfolder.yview)
   my_scrollbar1.place(relx=0.94, rely=0.02, relwidth=0.04, relheight=0.96)
@@ -154,8 +142,8 @@ def file_explorer(s):
   lfile.place(relx=0.02, rely=0.02, relwidth=0.92, relheight=0.96)
 
   lfile.bind('<ButtonRelease-1>', selectItemFile)
-  for x in range(30):
-      lfile.insert(parent='', index=x, iid=x, text='', values=('notepad', x))
+  # for x in range(len(files)):
+  #     lfile.insert(parent='', index=x, iid=x, text='', values=files[x])
 
   my_scrollbar2.config(command=lfile.yview)
   my_scrollbar2.place(relx=0.94, rely=0.02, relwidth=0.04, relheight=0.96)

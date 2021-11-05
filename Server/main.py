@@ -10,6 +10,7 @@ import subprocess
 
 import Utils.object_handler as oh
 import Utils.screen_stream as ss
+import Utils.tree_folder as tf
 
 #load enviroment variables
 SERVER_HOST = '127.0.0.1'
@@ -107,12 +108,24 @@ def processRequest(request, conn):
     if request[0] == 'screen stream':
        ss.screen_stream(conn) 
 
+    if request[0] == 'file explorer':
+        if request[1] != 'delete' and request[1] != 'copy':
+            dirs, files = tf.list_files(request[1])
+            oh.send_obj(conn, [dirs, files])
+            pass
+        else:
+            if request[1] == 'delete':
+                try:
+                    subprocess.call(['rm', '-r', request[2]])
+                    print("delete sucessful", request[2])
+                except:
+                    pass
+
     if request[0] == 'process':
         if request[1] == 'watch process':
             temp = getProcessRunning()
             for it in temp:
                 oh.send_obj(conn, it)
-                time.sleep(0.001)
         if request[1] == 'kill process':
             processId = int(request[2])
             try:
@@ -127,10 +140,8 @@ def processRequest(request, conn):
     if request[0] == 'application':
         if request[1] == 'watch application':
             temp = getListRunningWindows()
-            print(temp)
             for it in temp:
                 oh.send_obj(conn, it)
-                time.sleep(0.001)
         if request[1] == 'kill application':
             processId = int(request[2])
             try:
