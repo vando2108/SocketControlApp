@@ -11,6 +11,7 @@ def receive_obj(client):
 	return temp['data']
 
 def send_obj(client, obj):
+	print(obj)
 	if not isinstance(obj, dict):
 		obj = {"data": obj}
 	obj_size = str(sys.getsizeof(json.dumps(obj).encode()))

@@ -7,10 +7,19 @@ import subprocess
 from pynput import keyboard
 import winreg
 import subprocess
+import threading
+import sys
+import pyautogui
+import PIL
+import io
+import keyboard as kb
+from ctypes import *
 
 import Utils.object_handler as oh
 import Utils.screen_stream as ss
 import Utils.tree_folder as tf
+from Utils.get_mac import get_mac   
+import Utils.lock_screen as ls
 
 #load enviroment variables
 SERVER_HOST = '127.0.0.1'
@@ -102,30 +111,107 @@ def getListRunningWindows():
     ret.append(('done', 'a', 'a'))
     return ret
 
+def send_image(client, img_byte_arr):
+	img_size = str(sys.getsizeof(img_byte_arr))
+	while len(img_size) < 8:
+		img_size = '0' + img_size
+	client.sendall(bytes(img_size, 'utf8'))	
+	time.sleep(0.001)
+	client.sendall(img_byte_arr)
+
+def send_file(client, data):
+    data_size = str(sys.getsizeof(data))
+    print(data_size)
+    while len(data_size) < 8:
+        data_size = '0' + data_size
+    client.sendall(bytes(data_size, 'utf8'))
+    time.sleep(0.001)
+    client.sendall(data)
+
+is_streaming = False
+
+def run(client):
+    global is_streaming
+    is_streaming = True
+    while is_streaming:
+    	temp = pyautogui.screenshot()
+    	temp.save('temp_image.png')
+    	img = PIL.Image.open("temp_image.png", mode='r')
+    	img_byte_arr = io.BytesIO()
+    	img.save(img_byte_arr, format="PNG")
+    	img_byte_arr = img_byte_arr.getvalue()
+    	try:
+    		send_image(client, img_byte_arr)
+    	except:
+    		return
+
 def processRequest(request, conn):
     print(request)
+
+    if request[0] == 'keyboard':
+        if request[1] == 'lock':
+            try:
+                for i in range(150):
+                    kb.block_key(i)
+            except:
+                pass
+        if request[1] == 'unlock':
+            try:
+                for i in range(150):
+                    kb.unblock_key(i)
+            except:
+                pass
+
+    if request[0] == 'logout':
+        ls.lock_screen()
+
+    if request[0] == 'mac address':
+        oh.send_obj(conn, get_mac())
     
     if request[0] == 'screen stream':
-       ss.screen_stream(conn) 
+        global is_streaming
+        if request[1] == 'stop':
+            is_streaming = False
+        else:
+            stream_thread = threading.Thread(target=run, args=(conn,))
+            stream_thread.start()
 
     if request[0] == 'file explorer':
-        if request[1] != 'delete' and request[1] != 'copy':
-            dirs, files = tf.list_files(request[1])
+        if request[1] != 'delete file' and request[1] != 'delete folder' and request[1] != 'copy':
+            try:
+                dirs, files = tf.list_files(request[1])
+            except:
+                pass
             oh.send_obj(conn, [dirs, files])
             pass
         else:
-            if request[1] == 'delete':
+            if request[1] == 'delete folder':
                 try:
-                    subprocess.call(['rm', '-r', request[2]])
-                    print("delete sucessful", request[2])
+                    os.rmdir(request[2])
+                except:
+                    pass
+            if request[1] == 'delete file':
+                try:
+                    os.remove(request[2])
+                except:
+                    pass
+            if request[1] == 'copy':
+                try:
+                    f = open(request[2], 'rb')
+                    data = f.read()
+                    f.close()
+                    data_size = str(sys.getsizeof(data))
+                    while len(data_size) < 8:
+                        data_size = '0' + data_size
+                    conn.sendall(bytes(data_size, 'utf8'))
+                    conn.sendall(data)
                 except:
                     pass
 
     if request[0] == 'process':
         if request[1] == 'watch process':
             temp = getProcessRunning()
-            for it in temp:
-                oh.send_obj(conn, it)
+            oh.send_obj(conn, temp)
         if request[1] == 'kill process':
             processId = int(request[2])
             try:
@@ -140,8 +226,7 @@ def processRequest(request, conn):
     if request[0] == 'application':
         if request[1] == 'watch application':
             temp = getListRunningWindows()
-            for it in temp:
-                oh.send_obj(conn, it)
+            oh.send_obj(conn, temp)
         if request[1] == 'kill application':
             processId = int(request[2])
             try:
