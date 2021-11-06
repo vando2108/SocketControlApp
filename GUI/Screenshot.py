@@ -21,7 +21,8 @@ class MainWindow():
         self.canvas.bind("<Configure>", self.resize)
         self.pic = "screenshot.png"
         # get images
-        
+        # request = ['screen stream']
+        # send_obj(soc, request)
         ok = True
         while ok:
           ok = False
@@ -79,5 +80,8 @@ def screenshot(s):
     root.grab_set()
     root.title('Pic')
     root.geometry('700x500+100+100')
-    MainWindow(root)
+    ok = True
+    while ok:
+      MainWindow(root)
+      ok = False
     root.mainloop()

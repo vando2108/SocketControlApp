@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter.ttk import *
 import socket
 import Connect, FileExplorer, MACAddress, ProcessRunning, AppRunning, ShutDown
+import LiveScreen
 import KeyStroke, Logout, Screenshot
 from CheckConnect import check_connect
 from SendObject import send_obj
@@ -43,7 +44,9 @@ Button(win, text='Logout', command=lambda: Logout.logout(
     s)).place(relx=0.46, rely=0.4, relwidth=0.19, relheight=0.25)
 Button(win, text='Key\nStroke', command=lambda: KeyStroke.key_stroke(
     s)).place(relx=0.67, rely=0.18, relwidth=0.28, relheight=0.2)
-Button(win, text='Live\nScreen', command=lambda: Screenshot.screenshot(
+# Button(win, text='Live\nScreen', command=lambda: Screenshot.screenshot(
+#     s)).place(relx=0.67, rely=0.4, relwidth=0.28, relheight=0.25)
+Button(win, text='Live\nScreen', command=lambda: LiveScreen.live_screen(
     s)).place(relx=0.67, rely=0.4, relwidth=0.28, relheight=0.25)
 Button(win, text='File Explorer', command=lambda: FileExplorer.file_explorer(
     s)).place(relx=0.25, rely=0.67, relwidth=0.48, relheight=0.21)

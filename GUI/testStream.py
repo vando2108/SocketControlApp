@@ -5,8 +5,9 @@ import pygame
 from tkinter import *
 
 root = Tk()
-WIDTH = root.winfo_screenwidth() - 100
-HEIGHT = root.winfo_screenheight() - 100
+WIDTH = root.winfo_screenwidth()
+HEIGHT = root.winfo_screenheight()
+
 
 print(WIDTH)
 

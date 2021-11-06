@@ -1,55 +1,48 @@
-from socket import socket
-from threading import Thread
-from zlib import compress
-from tkinter import *
-from mss import mss
-
-root = Tk()
-WIDTH = root.winfo_screenwidth() - 100
-HEIGHT = root.winfo_screenheight() - 100
-
-print(WIDTH)
-print(HEIGHT)
-
-def retreive_screenshot(conn):
-    with mss() as sct:
-        # The region to capture
-        rect = {'top': 0, 'left': 0, 'width': WIDTH, 'height': HEIGHT}
-
-        while 'recording':
-            # Capture the screen
-            img = sct.grab(rect)
-            # Tweak the compression level here (0-9)
-            pixels = compress(img.rgb, 6)
-
-            # Send the size of the pixels length
-            size = len(pixels)
-            size_len = (size.bit_length() + 7) // 8
-            conn.send(bytes([size_len]))
-
-            # Send the actual pixels length
-            size_bytes = size.to_bytes(size_len, 'big')
-            conn.send(size_bytes)
-
-            # Send pixels
-            conn.sendall(pixels)
+import os
+import tkinter as tk
+import tkinter.ttk as ttk
 
 
-def main(host='127.0.0.1', port=9090):
-    sock = socket()
-    sock.bind((host, port))
-    try:
-        sock.listen(5)
-        print('Server started.')
+class App(object):
+    def __init__(self, master, path):
+        self.nodes = dict()
+        print(self.nodes)
+        frame = tk.Frame(master)
+        self.tree = ttk.Treeview(frame)
+        ysb = ttk.Scrollbar(frame, orient='vertical', command=self.tree.yview)
+        xsb = ttk.Scrollbar(frame, orient='horizontal', command=self.tree.xview)
+        self.tree.configure(yscroll=ysb.set, xscroll=xsb.set)
+        self.tree.heading('#0', text='Project tree', anchor='w')
 
-        while 'connected':
-            conn, addr = sock.accept()
-            print('Client connected IP:', addr)
-            thread = Thread(target=retreive_screenshot, args=(conn,))
-            thread.start()
-    finally:
-        sock.close()
+        self.tree.grid()
+        ysb.grid(row=0, column=1, sticky='ns')
+        xsb.grid(row=1, column=0, sticky='ew')
+        frame.grid()
+
+        abspath = os.path.abspath(path)
+        print(abspath)
+        self.insert_node('', abspath, abspath)
+        self.tree.bind('<<TreeviewOpen>>', self.open_node)
+
+    def insert_node(self, parent, text, abspath):
+        node = self.tree.insert(parent, 'end', text=text, open=False)
+        if os.path.isdir(abspath):
+            self.nodes[node] = abspath
+            self.tree.insert(node, 'end')
+            # print(self.tree.item(node))
+
+    def open_node(self, event):
+        node = self.tree.focus()
+        abspath = self.nodes.pop(node, None)
+        # print(abspath)
+        if abspath:
+            # print(abspath)
+            self.tree.delete(self.tree.get_children(node))
+            for p in os.listdir(abspath):
+                self.insert_node(node, p, os.path.join(abspath, p))
 
 
 if __name__ == '__main__':
-    main()
+    root = tk.Tk()
+    app = App(root, path='D:\\')
+    root.mainloop()

@@ -1,163 +1,177 @@
-from time import time
+from posixpath import abspath
+import socket
 from tkinter import *
 from tkinter import filedialog
 from tkinter.ttk import *
 from CheckConnect import check_connect
-from SendObject import receive_obj, send_obj
 
-path = None
-lfolder, lfile = None, None
-itemFolder, itemFile = None, None 
-pathList = ["C"]
+from SendObject import send_obj, receive_obj
 
-def selectItemFolder(a):
-  global itemFolder, lfolder
-  curItem = lfolder.focus()
-  itemFolder = lfolder.item(curItem)['values'][0]
-  pass
+soc = None
 
-def selectItemFile(a):
-  global itemFile, lfile
-  curItem = lfile.focus()
-  itemFile = lfile.item(curItem)['values'][0]
-  pass
+class Page(Frame):
+  def __init__(self, parent, soc):
+    self.root = parent
+    self.s = soc
+    # request = ['file explorer', "C:\\"]
+    # send_obj(soc, request)
+    # self.dirs, self.files = receive_obj(soc)
+    self.nodes = {}
+    # self.dirs = [['a', 'b', 'c'], ['d', 'e', 'f']]
+    # self.files = [['r', 'b', 'a'], ['q', 'e', 'd']]
 
-def requestPath(s, request):
-  send_obj(s, request)
-  listFolder, listFile = receive_obj(s)
-
-  lfolder.delete(*lfolder.get_children())
-  for i in range(len(listFolder)):
-    lfolder.insert(parent='', index=i, iid=i, text='', values=listFolder[i])
-
-  lfile.delete(*lfile.get_children())
-  for i in range(len(listFile)):
-    lfile.insert(parent='', index=i, iid=i, text='', values=listFile[i])
-
-  pass
-
-def toBack(s):
-  global path
-  if len(pathList) > 1: pathList.pop()
-  path.delete(0, END)
-  stringPath = ''
-  if len(pathList): stringPath = pathList[0] + ":\\"
-  for i in range(1, len(pathList)): stringPath = stringPath + pathList[i] + '\\'
-  path.insert(END, stringPath)
-  request = ['file explorer', stringPath]
-  requestPath(s, request)
+    Button(self.root, text='Back', command=self.toBack).place(relx=0.04, rely=0.02, relwidth=0.1, relheight=0.05)
+    Button(self.root, text='Refresh', command=self.toRefresh).place(relx=0.16, rely=0.02, relwidth=0.1, relheight=0.05)
+    self.path = Entry(self.root, font='Times 10')
+    self.path.insert(END, "D:\\")
+    self.path.place(relx=0.28, rely=0.02, relwidth=0.62, relheight=0.05)
   
-  pass
+    self.frame = LabelFrame(self.root, text='File Explorer')
+    self.frame.place(relx=0.04, rely=0.1, relwidth=0.9, relheight=0.85)
 
-def toRefresh(s):
-  requestPath(s, ['file explorer', path.get()])
-  pass
+    ###  Menu
+    self.popup = Menu(self.root, tearoff=0)
+    self.popup.add_command(label="Delete", command=self.delete)
+    self.popup.add_command(label="Copy", command=self.copy)
+    self.popup.add_command(label="Download", command=self.download)
+    #self.popup.add_separator()
 
-def toDeleteFolder(s):
-  global path, itemFolder
-  stringPath = path.get() + itemFolder + '\\'
-  request = ['file explorer', 'delete', stringPath]
-  send_obj(s, request)
-  pass 
+    def do_popup(event):
+      try:
+        self.popup.selection = self.tree.set(self.tree.identify_row(event.y))
+        self.popup.post(event.x_root, event.y_root)
+      finally:
+        self.popup.grab_release()
+    
+    ### Tree
+    scroll = Scrollbar(self.frame, orient=VERTICAL)
+    self.tree = Treeview(self.frame, yscrollcommand=scroll.set)
+    # self.tree['columns'] = ('Directory', 'Last modified time', 'Size')
+    self.tree['columns'] = ('Directory', 'Last modified time')
+    self.tree.column('#0', width=0, stretch=NO)    
+    self.tree.column('Directory', width=300, anchor=CENTER)
+    self.tree.column('Last modified time', width=50, anchor='w')
+    # self.tree.column('Size', width=50, anchor=CENTER)
 
-def toCopyFile(s):
-  global path, itemFile
-  stringPath = path.get() + itemFile
-  request = ['file explorer', 'copy', stringPath]
-  send_obj(s, request)
-  response = receive_obj(s)
-  filename = filedialog.asksaveasfilename(initialdir='/', title='Save File', 
-      filetypes=(('Text Files', 'txt.*'), ('All Files', '*.*')))
+    self.tree.heading('#0', text='', anchor='w')
+    self.tree.heading('Directory', text='Directory', anchor=CENTER)
+    self.tree.heading('Last modified time', text='Last modified time', anchor=CENTER)
+    # self.tree.heading('Size', text='Size', anchor=CENTER)
+    self.tree.place(relx=0.02, rely=0.02, relwidth=0.92, relheight=0.96)
+
+    # self.tree.bind('<ButtonRelease-1>', self.selectItem)
+    # self.tree.bind('<Double-1>', self.openFolder)
+    # self.tree.bind('<Button-3>', do_popup)
+    # for x in range(len(self.dirs)):
+    #   self.tree.insert(parent='', index=x, iid=x, text='', values=self.dirs[x])
+    abspath = 'D:\\'
+    self.insert_node('', (abspath, ''), abspath)
+    self.tree.bind('<<TreeviewOpen>>', self.open_node)
+
+    scroll.config(command=self.tree.yview)
+    scroll.place(relx=0.94, rely=0.02, relwidth=0.04, relheight=0.96)
+    
+    pass
+
+  def insert_node(self, parent, value, abspath):
+    # print(abspath)
+    node = self.tree.insert(parent, 'end', text=value[0], values=value, open=False)
+    if abspath:
+      self.nodes[node] = abspath
+      self.tree.insert(node, 'end')
+    pass
+
+  def open_node(self, event):
+    node = self.tree.focus()
+    # print(self.tree.item(self.tree.selection()[0])['text'])
+    abspath = self.nodes.pop(node, None)
+    if abspath:
+      print(abspath)
+      request = ['file explorer', abspath]
+      send_obj(self.s, request)
+      self.dirs, self.files = receive_obj(self.s)
+
+      # dirs
+      self.tree.delete(self.tree.get_children(node))
+      for p in self.dirs:
+        self.insert_node(node, p, abspath+'\\'+p[0])
+
+      # files
+      for p in self.files:
+        self.insert_node(node, p, None)
+    pass
+
+  def getPath(self, id):
+    stringPath = self.tree.item(id)['text']
+    id = self.tree.parent(id)
+    while self.tree.item(id)['text'] != '':
+      stringPath = self.tree.item(id)['text'] + '\\' + stringPath
+      id = self.tree.parent(id)
+    print(stringPath)
+    return stringPath
+    pass
+
+  def requestPath(request):
+    pass
+
+  def toBack(self):
+    if len(self.pathList) > 1: self.pathList.pop()
+    self.path.delete(0, END)
+    stringPath = ''
+    if len(self.pathList): stringPath = self.pathList[0] + "\\"
+    for i in range(1, len(self.pathList)): stringPath = stringPath + self.pathList[i] + '\\'
+    self.path.insert(END, stringPath)
+    request = ['file explorer', stringPath]
+    self.requestPath(request)
+    pass
+
+  def toRefresh():
+    print('refresh')
+    pass
   
-  myfile = open(filename, "wb")
-  myfile.write(response)
-  myfile.close()
-  pass
+  def openFolder():
 
-def toDeleteFile(s):
-  global path, itemFile
-  stringPath = path.get() + itemFile
-  request = ['file explorer', 'delete', stringPath]
-  send_obj(s, request)
-  pass 
+    pass
 
-def openFolder(event, s):
-  global path, itemFolder
-  stringPath = path.get() + itemFolder + '\\'
-  pathList.append(itemFolder)
-  request = ['file explorer', stringPath]
-  path.delete(0, END)
-  path.insert(END, stringPath)
-  requestPath(s, request)
-  pass
+  def selectItem():
+    pass
+
+  def delete(self):
+    print(self.popup.selection['Directory'])
+    stringPath = self.path.get() + self.popup.selection['Directory']
+    request = ['file explorer', 'delete', stringPath]
+    send_obj(self.s, request)
+    pass
+
+  def copy(self):
+    print(self.popup.selection)
+    stringPath = self.path.get() + self.popup.selection['Directory']
+    request = ['file explorer', 'copy', stringPath]
+    send_obj(self.s, request)
+    response = receive_obj(self.s)
+    filename = filedialog.asksaveasfilename(initialdir='/', title='Save File', 
+        filetypes=(('Text Files', 'txt.*'), ('All Files', '*.*')))
+    
+    myfile = open(filename, "wb")
+    myfile.write(response)
+    myfile.close()
+    pass
+
+  def download(self):
+    print(self.popup.selection)
+    pass
+
+# ---------------------
 
 def file_explorer(s):
-  global path, itemFile, itemFolder, lfolder, lfile
-
   if check_connect(s) == False: return
-  request = ['file explorer', "C:\\"]
-  requestPath(s, request)
-
-  root = Toplevel()
-  root.grab_set()
+  root = Tk()
   root.title('File Explorer')
-  root.geometry('700x500+200+100')
-
-  ### folder
-  label1 = LabelFrame(root, text='Folder')
-  label1.place(relx=0.04, rely=0.1, relwidth=0.9, relheight=0.38)
-  my_scrollbar1 = Scrollbar(label1, orient=VERTICAL)
-  lfolder = Treeview(label1, yscrollcommand=my_scrollbar1.set)
-  lfolder['columns'] = ('Folder Name', 'Create At')
-  lfolder.column('#0', width=0, stretch=NO)    
-  lfolder.column('Folder Name', width=200, anchor=CENTER)
-  lfolder.column('Create At', width=100, anchor=CENTER)
-
-  lfolder.heading('#0', text='', anchor=CENTER)
-  lfolder.heading('Folder Name', text='Folder Name', anchor=CENTER)
-  lfolder.heading('Create At', text='Create At', anchor=CENTER)
-  lfolder.place(relx=0.02, rely=0.02, relwidth=0.92, relheight=0.96)
-
-  lfolder.bind('<ButtonRelease-1>', selectItemFolder)
-  lfolder.bind('<Double-1>', lambda _ : openFolder(_, s))
-  # for x in range(len(dirs)):
-  #   lfolder.insert(parent='', index=x, iid=x, text='', values=dirs[x])
-
-  my_scrollbar1.config(command=lfolder.yview)
-  my_scrollbar1.place(relx=0.94, rely=0.02, relwidth=0.04, relheight=0.96)
-
-  ### File
-  label2 = LabelFrame(root, text='File')
-  label2.place(relx=0.04, rely=0.5, relwidth=0.9, relheight=0.38)
-  my_scrollbar2 = Scrollbar(label2, orient=VERTICAL)
-  lfile = Treeview(label2, yscrollcommand=my_scrollbar2.set)
-  lfile['columns'] = ('File Name', 'Create At')
-  lfile.column('#0', width=0, stretch=NO)    
-  lfile.column('File Name', width=200, anchor=CENTER)
-  lfile.column('Create At', width=100, anchor=CENTER)
-
-  lfile.heading('#0', text='', anchor=CENTER)
-  lfile.heading('File Name', text='File Name', anchor=CENTER)
-  lfile.heading('Create At', text='Create At', anchor=CENTER)
-  lfile.place(relx=0.02, rely=0.02, relwidth=0.92, relheight=0.96)
-
-  lfile.bind('<ButtonRelease-1>', selectItemFile)
-  # for x in range(len(files)):
-  #     lfile.insert(parent='', index=x, iid=x, text='', values=files[x])
-
-  my_scrollbar2.config(command=lfile.yview)
-  my_scrollbar2.place(relx=0.94, rely=0.02, relwidth=0.04, relheight=0.96)
-
-
-  Button(root, text='Back', command=lambda: toBack(s)).place(relx=0.04, rely=0.02, relwidth=0.1, relheight=0.05)
-  Button(root, text='Refresh', command=lambda: toRefresh(s)).place(relx=0.16, rely=0.02, relwidth=0.1, relheight=0.05)
-  path = Entry(root, font='Times 10')
-  path.insert(END, "C:\\")
-  path.place(relx=0.28, rely=0.02, relwidth=0.67, relheight=0.05)
-  
-  Button(root, text='Delete Folder', command=lambda: toDeleteFolder(s)).place(relx=0.15, rely=0.9, relwidth=0.2, relheight=0.05)
-  Button(root, text='Copy File', command=lambda: toCopyFile(s)).place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.05)
-  Button(root, text='Delete File', command=lambda: toDeleteFile(s)).place(relx=0.65, rely=0.9, relwidth=0.2, relheight=0.05)
-  
+  root.geometry('800x500+200+100')
+  Page(root, s)
   root.mainloop()
-  pass
+
+
+# if __name__ == "__main__":
+#   file_explorer(None)
+#   pass
