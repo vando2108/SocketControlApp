@@ -20,7 +20,7 @@ if __name__ == '__main__':
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     win = Tk()
     win.title('Client')
-    win.geometry('1000x650+100+20')
+    win.geometry('1200x650+100+20')
 
     # Frame 1
     frame1 = LabelFrame(win, text='Connecting')

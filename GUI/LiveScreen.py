@@ -1,74 +1,54 @@
-import time
-import tkinter
+from io import BytesIO
 from tkinter import *
 from tkinter.ttk import *
-
+import socket
 from PIL import ImageTk, Image
-from CheckConnect import check_connect
+from tkinter import filedialog
 from SendObject import send_obj, receive_obj, receive_image
+from CheckConnect import check_connect
+import cv2
+import numpy as np
+import threading
 
-check = None
+soc = None
 
-class MainWindow():
-  def __init__(self, s, main):
-    # canvas for image
-    self.canvas = Canvas(main)
-    self.canvas.place(relx=0, rely=0, relwidth=1, relheight=1)
-    self.canvas.bind("<Configure>", self.resize)
-    self.pic = "screenshot.png"
-    # get images
-    request = ['screen stream']
-    send_obj(s, request)
-    response = receive_image(s)
-    f = open(self.pic, "wb")
-    f.write(response)
-    f.close()
-    # images
-    self.photo = Image.open(self.pic).resize((490, 400), Image.ANTIALIAS)
-    self.img = ImageTk.PhotoImage(self.photo)
+def show_video():
+    request = ['screen stream', 'start']
+    send_obj(soc, request)
+    while True:
+        data = receive_image(soc)
+        f = open("temp_pic.png", "wb")
+        f.write(data)
+        f.close()
+        img = cv2.imread("temp_pic.png")
+        nparr = np.fromstring(data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-    # set first image on canvas
-    self.canvas_img = self.canvas.create_image(0, 0, anchor = NW, image = self.img)
-    pass
+        scale = 60
+        witdh = int(img.shape[1] * scale / 100)
+        height = int(img.shape[0] * scale / 100)
+        dim = (witdh, height)
+        img = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
+        cv2.imshow('frame', img)
+        if cv2.waitKey(25) & 0xFF == ord('q'):
+            request = ['screen stream', 'stop']
+            send_obj(soc, request)
+            data = receive_image(soc)
+            break
 
-  # ----
-  def resize(self, event):
-    img = Image.open(self.pic).resize(
-        (event.width, event.height), Image.ANTIALIAS
-    )
-    self.img = ImageTk.PhotoImage(img)
-    self.canvas.itemconfig(self.canvas_img, image=self.img)
-    pass
+    cv2.destroyAllWindows()
 
-# ------------
-
-
-def turnOn(s, frame):
-  global check
-  check = True
-  while check:
-    check = False
-    MainWindow(s, frame)
-  pass
-
-def turnOff(s):
-  global check
-  check = False
-
+#----------------------------------------------------------------------
 def live_screen(s, frame):
-  if check_connect(s) == False: return
-  root = frame
-  for widget in root.winfo_children():
-    widget.destroy()
-  root.configure(text='Screen')
-
-  make_frame = LabelFrame(root, text='Screen', width=500, height=400)
-  make_frame.place(relx=0.05, rely = 0.05, relwidth=0.9, relheight=0.8)
-
-  Button(root, text='Turn On', command=lambda: turnOn(
-      s, make_frame)).place(relx=0.2, rely=0.9, relwidth=0.2, relheight=0.05)
-  Button(root, text='Turn Off', command=lambda: turnOff(
-      s)).place(relx=0.6, rely=0.9, relwidth=0.2, relheight=0.05)
-  
-  # root.mainloop()
-  pass
+    global soc
+    soc = s
+    show_video()
+    #t1 = threading.Thread(target=show_video)
+    #t1.start()
+    #t1.join()
+    #root = Toplevel()
+    #root.grab_set()
+    #root.title('Pic')
+    #root.geometry('700x500+100+100')
+    #MainWindow(root)
+    #root.mainloop()

@@ -14,6 +14,9 @@ import PIL
 import io
 import keyboard as kb
 from ctypes import *
+from PIL import ImageGrab
+from tkinter import *
+from tkinter.ttk import *
 
 import Utils.object_handler as oh
 import Utils.screen_stream as ss
@@ -111,12 +114,12 @@ def getListRunningWindows():
     return ret
 
 def send_image(client, img_byte_arr):
-	img_size = str(len(img_byte_arr))
-	while len(img_size) < 8:
-		img_size = '0' + img_size
-	client.sendall(bytes(img_size, 'utf8'))	
-	time.sleep(0.001)
-	client.sendall(img_byte_arr)
+    img_size = str(len(img_byte_arr))
+    while len(img_size) < 8:
+      img_size = '0' + img_size
+    print(img_size)
+    client.sendall(bytes(img_size, 'utf8'))	
+    client.sendall(img_byte_arr)
 
 def send_file(client, data):
     data_size = str(len(data))
@@ -124,7 +127,7 @@ def send_file(client, data):
     while len(data_size) < 8:
         data_size = '0' + data_size
     client.sendall(bytes(data_size, 'utf8'))
-    time.sleep(0.001)
+    # time.sleep(0.001)
     client.sendall(data)
 
 is_streaming = False
@@ -133,10 +136,13 @@ def run(client):
     global is_streaming
     is_streaming = True
     while is_streaming:
-        is_streaming = False
-        temp = pyautogui.screenshot()
-        temp.save('temp_image.png')
-        img = PIL.Image.open("temp_image.png", mode='r')
+        # is_streaming = False
+        # temp = pyautogui.screenshot()
+        # temp.save('temp_image.png')
+        # img = PIL.Image.open("temp_image.png", mode='r')
+
+        img = ImageGrab.grab()
+        # img.save('temp_image.png')
         img_byte_arr = io.BytesIO()
         img.save(img_byte_arr, format="PNG")
         img_byte_arr = img_byte_arr.getvalue()
@@ -170,7 +176,7 @@ def processRequest(request, conn):
     
     if request[0] == 'screen stream':
         global is_streaming
-        if False:#request[1] == 'stop':
+        if request[1] == 'stop':
             is_streaming = False
         else:
             stream_thread = threading.Thread(target=run, args=(conn,))
@@ -328,7 +334,7 @@ def processRequest(request, conn):
     if request[0] == 'Shutdown':
         os.system('shutdown -s')
 
-if __name__ == '__main__':
+def startSever():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((SERVER_HOST, int(SERVER_PORT)))
         s.listen()
@@ -344,3 +350,15 @@ if __name__ == '__main__':
                         break
                     processRequest(request, conn)
                 conn.close
+
+def stopSever():
+  pass
+
+if __name__ == '__main__':
+  root = Tk()
+  root.title('Sever')
+  root.geometry('200x200+100+100')
+  Button(root, text='Start', command=startSever).place(relx=0.3, rely=0.1, relheight=0.35, relwidth=0.35)
+  Button(root, text='Stop', command=stopSever).place(relx=0.3, rely=0.55, relheight=0.35, relwidth=0.35)
+  root.mainloop()
+  pass

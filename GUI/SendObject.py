@@ -28,8 +28,9 @@ def send_obj(client, obj):
 
 def receive_image(client):
     obj_size = client.recv(8)
-    # time.sleep(0.01)
+    time.sleep(0.01)
     obj_size = int(obj_size.decode("utf8"))
+    # print(obj_size)
     data = client.recv(obj_size)
-    # time.sleep(0.01)
+    time.sleep(0.01)
     return data
