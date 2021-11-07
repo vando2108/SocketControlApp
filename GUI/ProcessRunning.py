@@ -90,15 +90,15 @@ def selectItem(a):
   print(itemProcess)
   pass
 
-def process_running(s):
+def process_running(s, frame):
     if check_connect(s) == False: return
 
     global lb
 
-    root = Toplevel()
-    root.grab_set()
-    root.title('Process')
-    root.geometry('400x400')
+    root = frame
+    for widget in root.winfo_children():
+        widget.destroy()
+    root.configure(text='Process Running')
 
     label1 = LabelFrame(root, text='Process Running')
     label1.place(relx=0.04, rely=0.2, relwidth=0.9, relheight=0.7)
@@ -127,5 +127,5 @@ def process_running(s):
     Button(root, text='Watch', command=lambda: watch_process(s)).place(relx=0.28, rely=0.05, relwidth=0.2, relheight=0.1)
     Button(root, text='Delete', command=lambda: delete_process()).place(relx=0.52, rely=0.05, relwidth=0.2, relheight=0.1)
     Button(root, text='Start', command=lambda: start_process(s)).place(relx=0.76, rely=0.05, relwidth=0.2, relheight=0.1) 
-    root.mainloop()
+    # root.mainloop()
     pass

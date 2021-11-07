@@ -55,12 +55,13 @@ def turnOff(s):
   global check
   check = False
 
-def live_screen(s):
+def live_screen(s, frame):
   if check_connect(s) == False: return
-  root = Toplevel()
-  root.grab_set()
-  root.title('Live screen')
-  root.geometry('700x500+100+100')
+  root = frame
+  for widget in root.winfo_children():
+    widget.destroy()
+  root.configure(text='Screen')
+
   make_frame = LabelFrame(root, text='Screen', width=500, height=400)
   make_frame.place(relx=0.05, rely = 0.05, relwidth=0.9, relheight=0.8)
 
@@ -69,5 +70,5 @@ def live_screen(s):
   Button(root, text='Turn Off', command=lambda: turnOff(
       s)).place(relx=0.6, rely=0.9, relwidth=0.2, relheight=0.05)
   
-  root.mainloop()
+  # root.mainloop()
   pass

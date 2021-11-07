@@ -51,7 +51,7 @@ class Page(Frame):
     self.tree.bind('<ButtonRelease-1>', self.selectItem)
     self.tree.bind('<Button-3>', do_popup)
     abspath = 'D:'
-    self.insert_node('', (abspath, ''), abspath+'\\')
+    self.insert_node('', (abspath, '', ''), abspath+'\\')
     self.tree.bind('<<TreeviewOpen>>', self.open_node)
 
     scroll.config(command=self.tree.yview)
@@ -123,14 +123,13 @@ class Page(Frame):
 
 # ---------------------
 
-def file_explorer(s):
+def file_explorer(s, frame):
   if check_connect(s) == False: return
-  root = Tk()
-  root.title('File Explorer')
-  root.geometry('800x500+200+100')
+  root = frame
+  for widget in root.winfo_children():
+    widget.destroy()
+  root.configure(text='Tree Folder')
   Page(root, s)
-  root.mainloop()
-
 
 # if __name__ == "__main__":
 #   file_explorer(None)

@@ -60,7 +60,7 @@ def function_changed(event):
         pass
 
 def Send(s):
-    # if check_connect(s) == False: return
+    if check_connect(s) == False: return
     global select_path, sf, namee, valuee, typee, text_2, list_type
 
     data = ['registry', sf.get(), select_path.get(), namee.get(), valuee.get(), typee.get()]
@@ -79,14 +79,15 @@ def Delete():
     text_2.configure(state='disabled')
     pass
 
-def edit_registry(s):
-    if check_connect(s) == False: return
+def edit_registry(s, frame):
+    # if check_connect(s) == False: return
     global root, path, t, sf, namee, valuee, typee, select_path, text_2
 
-    root = Toplevel()
-    root.grab_set()
-    root.title("registry")
-    root.geometry("500x500+100+100")
+    root = frame
+    for widget in root.winfo_children():
+        widget.destroy()
+    root.configure(text='Registry')
+    
     path = Entry(root, font = 'Times 10')
     path.insert(END, "Path")
     path.place(relx=0.05, rely=0.02, relwidth=0.65, relheight=0.05)
@@ -131,5 +132,5 @@ def edit_registry(s):
     Button(root, text='Send', command=lambda: Send(s)).place(relx=0.2, rely=0.90, relwidth=0.2, relheight=0.05)
     Button(root, text='Delete', command=Delete).place(relx=0.5, rely=0.90, relwidth=0.2, relheight=0.05)
 
-    root.mainloop()
+    # root.mainloop()
     pass
