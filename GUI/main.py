@@ -10,7 +10,7 @@ from SendObject import send_obj
 HOST = '127.0.0.1'
 PORT = 9090
 
-def quit_button(s, win):
+def quit_button(s):
     if check_connect(s):
         send_obj(s, ["quit"])
         s.close()

@@ -29,24 +29,13 @@ def kill_process(s):
     watch_process(s)
     pass
 
-def receivedListProcess(s):
-    global list_process
-    list_process.clear()
-    while True:
-        data = receive_obj(s)
-        if data[0] == 'done':
-            break
-        list_process.append(data)
-    #return list_process
-    pass
-
 def watch_process(s):
     if check_connect(s) == False: return
     global list_process, lb
 
     request = ['process', 'watch process']
     send_obj(s, request)
-    receivedListProcess(s)
+    list_process = receive_obj(s)
     #data = ['1', '2', '3']
     #list_process = [('a', '1', '1'), ('b', '2', '2'), ('c', '7', '3')]
     lb.delete(*lb.get_children())

@@ -25,24 +25,13 @@ def kill_application(s):
     watch_application(s)
     pass
 
-def receivedListapplication(s):
-    global list_application
-    list_application.clear()
-    while True:
-        data = receive_obj(s)
-        if data[0] == 'done':
-            break
-        list_application.append(data)
-    #return list_application
-    pass
-
 def watch_application(s):
     #if check_connect(s) == False: return
     global list_application, lb
 
     request = ['application', 'watch application']
     send_obj(s, request)
-    receivedListapplication(s)
+    list_application = receive_obj(s)
     #data = ['1', '2', '3']
     #list_application = [('a', '1', '1'), ('b', '2', '2'), ('c', '7', '3')]
     lb.delete(*lb.get_children())

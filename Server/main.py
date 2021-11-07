@@ -83,7 +83,7 @@ def getProcessRunning():
             if len(temp) == 6:
                 ret.append((temp[1], temp[3], temp[4]))
     except IndexError as e:
-        ret.append(('done', 'a', 'b'))
+      pass
     ret.pop(0)
     return ret
 
@@ -108,11 +108,10 @@ def getListRunningWindows():
                     name = name + ' ' + temp[i]
             ret.append((name, temp[len(temp) -  2], temp[len(temp) - 1]))
     ret = ret[2:]
-    ret.append(('done', 'a', 'a'))
     return ret
 
 def send_image(client, img_byte_arr):
-	img_size = str(sys.getsizeof(img_byte_arr))
+	img_size = str(len(img_byte_arr))
 	while len(img_size) < 8:
 		img_size = '0' + img_size
 	client.sendall(bytes(img_size, 'utf8'))	
@@ -120,7 +119,7 @@ def send_image(client, img_byte_arr):
 	client.sendall(img_byte_arr)
 
 def send_file(client, data):
-    data_size = str(sys.getsizeof(data))
+    data_size = str(len(data))
     print(data_size)
     while len(data_size) < 8:
         data_size = '0' + data_size
@@ -134,16 +133,17 @@ def run(client):
     global is_streaming
     is_streaming = True
     while is_streaming:
-    	temp = pyautogui.screenshot()
-    	temp.save('temp_image.png')
-    	img = PIL.Image.open("temp_image.png", mode='r')
-    	img_byte_arr = io.BytesIO()
-    	img.save(img_byte_arr, format="PNG")
-    	img_byte_arr = img_byte_arr.getvalue()
-    	try:
-    		send_image(client, img_byte_arr)
-    	except:
-    		return
+        is_streaming = False
+        temp = pyautogui.screenshot()
+        temp.save('temp_image.png')
+        img = PIL.Image.open("temp_image.png", mode='r')
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format="PNG")
+        img_byte_arr = img_byte_arr.getvalue()
+        try:
+          send_image(client, img_byte_arr)
+        except:
+          return
 
 def processRequest(request, conn):
     print(request)
@@ -170,7 +170,7 @@ def processRequest(request, conn):
     
     if request[0] == 'screen stream':
         global is_streaming
-        if request[1] == 'stop':
+        if False:#request[1] == 'stop':
             is_streaming = False
         else:
             stream_thread = threading.Thread(target=run, args=(conn,))
@@ -200,7 +200,7 @@ def processRequest(request, conn):
                     f = open(request[2], 'rb')
                     data = f.read()
                     f.close()
-                    data_size = str(sys.getsizeof(data))
+                    data_size = str(len(data))
                     while len(data_size) < 8:
                         data_size = '0' + data_size
                     conn.sendall(bytes(data_size, 'utf8'))

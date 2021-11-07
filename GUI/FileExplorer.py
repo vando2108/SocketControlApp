@@ -18,6 +18,7 @@ class Page(Frame):
     self.path = Entry(self.root, font='Times 10')
     self.path.insert(END, "D:\\")
     self.path.place(relx=0.12, rely=0.02, relwidth=0.5, relheight=0.05)
+    Button(self.root, text='Reload', command=self.reload).place(relx=0.65, rely=0.02, relwidth=0.2, relheight=0.05)
   
     self.frame = LabelFrame(self.root, text='File Explorer')
     self.frame.place(relx=0.04, rely=0.1, relwidth=0.9, relheight=0.85)
@@ -84,6 +85,12 @@ class Page(Frame):
       # files
       for p in files:
         self.insert_node(node, p, None)
+    pass
+
+  def reload(self):
+    self.tree.delete(*self.tree.get_children())
+    abspath = self.path.get()
+    self.insert_node('', (abspath, '', ''), abspath+'\\')
     pass
 
   def selectItem(self, event):

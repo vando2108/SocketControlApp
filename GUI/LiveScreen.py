@@ -47,7 +47,7 @@ def turnOn(s, frame):
   global check
   check = True
   while check:
-    # check = False
+    check = False
     MainWindow(s, frame)
   pass
 
