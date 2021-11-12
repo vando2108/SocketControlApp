@@ -1,15 +1,14 @@
 import json
 import sys
+import time
 
 from numpy.lib.arraysetops import isin
 
 def receive_obj(client):
 	obj_size = client.recv(8)
 	obj_size = (obj_size.decode("utf8"))
-	print(obj_size)
 	obj_size = int(obj_size)
 	temp = client.recv(obj_size)
-	print(temp)
 	temp = json.loads(temp.decode())
 	return temp['data']
 
@@ -22,10 +21,12 @@ def send_obj(client, obj):
 	while len(obj_size) < 8:
 		obj_size = '0' + obj_size
 	client.sendall(bytes(obj_size, "utf8"))
+	time.sleep(0.001)
 	client.sendall(json.dumps(obj).encode())
 
 def receive_image(client):
 	obj_size = client.recv(8)
-	obj_size = int(obj_size.decode())
+	obj_size = int(obj_size.decode('utf8'))
+	time.sleep(0.001)
 	data = client.recv(obj_size)
 	return data

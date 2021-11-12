@@ -49,7 +49,7 @@ class MainWindow():
 
     def takeScreenshot(self):
         if check_connect(soc) == False: return
-        request = ['screenshot']
+        request = ['screen stream']
         send_obj(soc, request)
         data = receive_image(soc)
         f = open(self.pic, "wb")
